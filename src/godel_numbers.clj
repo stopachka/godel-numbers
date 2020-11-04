@@ -32,16 +32,16 @@
        (map vector (lazy-primes))
        (reduce
          (fn [res [prime num]]
-           (* res (Math/pow prime num)))
-         1)))
+           (* (.pow (biginteger prime) num) res))
+         (bigint 1))))
 
 (defn factorize
   "factorization, but optimized for our num->char
 
   we can cheat a bit by knowing the max exponent we can have"
   [num]
-  (loop [num (double num) acc [1] primes (lazy-primes)]
-    (if (= num 1.0)
+  (loop [num (biginteger num) acc [1] primes (lazy-primes)]
+    (if (= num 1N)
       acc
       (let [factor (first primes)]
         (if (zero? (mod num factor))
