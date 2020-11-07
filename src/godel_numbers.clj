@@ -7,11 +7,11 @@
   ([current known-primes]
    (let [factors (take-while #(<= (* % %) current) known-primes)
          remainders (map #(mod current %) factors)]
-     (if (not-any? zero? remainders)
+     (if (some zero? remainders)
+       (recur (inc current) known-primes)
        (lazy-seq (cons
                    current
-                   (primes (inc current) (conj known-primes current))))
-       (recur (inc current) known-primes)))))
+                   (primes (inc current) (conj known-primes current))))))))
 
 (defn factorize
   [num]
