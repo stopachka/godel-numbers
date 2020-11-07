@@ -2,18 +2,26 @@
   (:require [clojure.set :refer [map-invert]]
             [clojure.string :as string]))
 
-; primes
-
-(defn lazy-primes
-  ([] (lazy-primes 2 []))
+(defn primes
+  ([] (primes 2 []))
   ([current known-primes]
    (let [factors (take-while #(<= (* % %) current) known-primes)
          remainders (map #(mod current %) factors)]
      (if (not-any? zero? remainders)
        (lazy-seq (cons
                    current
-                   (lazy-primes (inc current) (conj known-primes current))))
+                   (primes (inc current) (conj known-primes current))))
        (recur (inc current) known-primes)))))
+
+(defn factorize
+  [num]
+  (loop [num (biginteger num) acc [1] primes (primes)]
+    (if (= num 1N)
+      acc
+      (let [factor (first primes)]
+        (if (zero? (mod num factor))
+          (recur (quot num factor) (conj acc factor) primes)
+          (recur num acc (rest primes)))))))
 
 (defn char-range [start end]
   (map char (range (int start) (inc (int end)))))
@@ -29,24 +37,11 @@
 (defn chars->godel-num [chars]
   (->> chars
        (map char->num)
-       (map vector (lazy-primes))
+       (map vector (primes))
        (reduce
          (fn [res [prime num]]
            (* (.pow (biginteger prime) num) res))
          (bigint 1))))
-
-(defn factorize
-  "factorization, but optimized for our num->char
-
-  we can cheat a bit by knowing the max exponent we can have"
-  [num]
-  (loop [num (biginteger num) acc [1] primes (lazy-primes)]
-    (if (= num 1N)
-      acc
-      (let [factor (first primes)]
-        (if (zero? (mod num factor))
-          (recur (quot num factor) (conj acc factor) primes)
-          (recur num acc (rest primes)))))))
 
 (defn godel-num->chars [godel-num]
   (->> (factorize godel-num)
