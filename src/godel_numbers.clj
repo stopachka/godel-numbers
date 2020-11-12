@@ -67,16 +67,17 @@
      :else
      (advance-prime-token primes res form))))
 
+(defn bigpow [a b]
+  (.pow (biginteger a) b))
+
 (defn pm-lisp->godel-num [form]
   (->> (prime-and-token form)
-       (reduce
-         (fn [res [prime num]]
-           (* (.pow (biginteger prime) num) res))
-         (bigint 1))))
+       (map (partial apply bigpow))
+       (reduce *)))
 
 (defn godel-num->pm-lisp [godel-num]
   (->> (factorize godel-num)
-       (drop 1)
+       rest
        frequencies
        sort
        (map (comp num->token second))
