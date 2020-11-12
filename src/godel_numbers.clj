@@ -43,7 +43,7 @@
 
 (def num->token (map-invert token->num))
 
-(defn- advance-prime-token [primes res token]
+(defn- advance-prime-and-token [primes res token]
   [(rest primes)
    (conj res [(first primes) (token->num token)])])
 
@@ -54,7 +54,7 @@
      (seq? form)
      (let [[primes-after-open-bracket
             res-after-open-bracket]
-           (advance-prime-token primes res open-bracket)
+           (advance-prime-and-token primes res open-bracket)
 
            [primes-after-seq
             res-after-seq]
@@ -63,9 +63,9 @@
                (prime-and-token primes res form))
              [primes-after-open-bracket res-after-open-bracket]
              form)]
-       (advance-prime-token primes-after-seq res-after-seq close-bracket))
+       (advance-prime-and-token primes-after-seq res-after-seq close-bracket))
      :else
-     (advance-prime-token primes res form))))
+     (advance-prime-and-token primes res form))))
 
 (defn bigpow [a b]
   (.pow (biginteger a) b))
