@@ -52,8 +52,7 @@
   ([primes res form]
    (cond
      (seq? form)
-     (let [
-           [primes-after-open-bracket
+     (let [[primes-after-open-bracket
             res-after-open-bracket]
            (advance-prime-token primes res open-bracket)
 
