@@ -23,34 +23,67 @@
           (recur (quot num factor) (conj acc factor) primes)
           (recur num acc (rest primes)))))))
 
-(defn char-range [start end]
-  (map char (range (int start) (inc (int end)))))
+(def open-bracket (symbol "("))
+(def close-bracket (symbol ")"))
 
-(def char->num (->> (char-range \a \z)
-                    (map-indexed (fn [i x] [x (inc i)]))
-                    (into {})))
+(def token->num {open-bracket 1
+                 close-bracket 3
+                 0 5
+                 'next 7
+                 '+ 9
+                 '* 11
+                 '= 13
+                 'not 15
+                 'or 17
+                 'when 19
+                 'there-is 21
+                 'a 2
+                 'b 4
+                 'c 6})
 
-(def num->char (map-invert char->num))
+(def num->token (map-invert token->num))
 
-(def max-num (->> num->char (map first) sort last))
+(defn- advance-prime-token [primes res token]
+  [(rest primes)
+   (conj res [(first primes) (token->num token)])])
 
-(defn chars->godel-num [chars]
-  (->> chars
-       (map char->num)
-       (map vector (primes))
+(defn prime-and-token
+  ([form] (second (prime-and-token (primes) [] form)))
+  ([primes res form]
+   (cond
+     (seq? form)
+     (let [
+           [primes-after-open-bracket
+            res-after-open-bracket]
+           (advance-prime-token primes res open-bracket)
+
+           [primes-after-seq
+            res-after-seq]
+           (reduce
+             (fn [[primes res] form]
+               (prime-and-token primes res form))
+             [primes-after-open-bracket res-after-open-bracket]
+             form)]
+       (advance-prime-token primes-after-seq res-after-seq close-bracket))
+     :else
+     (advance-prime-token primes res form))))
+
+(defn pm-lisp->godel-num [form]
+  (->> (prime-and-token form)
        (reduce
          (fn [res [prime num]]
            (* (.pow (biginteger prime) num) res))
          (bigint 1))))
 
-(defn godel-num->chars [godel-num]
+(defn godel-num->pm-lisp [godel-num]
   (->> (factorize godel-num)
        (drop 1)
        frequencies
        sort
-       (map (comp num->char second))
-       string/join))
+       (map (comp num->token second))
+       (string/join #" ")
+       read-string))
 
 (comment
-  (chars->godel-num "hi")
-  (godel-num->chars 5038848))
+  (pm-lisp->godel-num '(next 0))
+  (godel-num->pm-lisp 4688381250N))
