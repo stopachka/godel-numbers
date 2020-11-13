@@ -43,35 +43,28 @@
 
 (def num->token (map-invert token->num))
 
-(defn- advance-prime-and-token [primes res token]
-  [(rest primes)
-   (conj res [(first primes) (token->num token)])])
+(defn parse-tokens
+  ([form] (parse-tokens [] form))
+  ([res form]
+   (if (seq? form)
+     (let [res-after-open-bracket
+           (conj res open-bracket)
 
-(defn prime-and-token
-  ([form] (second (prime-and-token (primes) [] form)))
-  ([primes res form]
-   (cond
-     (seq? form)
-     (let [[primes-after-open-bracket
-            res-after-open-bracket]
-           (advance-prime-and-token primes res open-bracket)
-
-           [primes-after-seq
-            res-after-seq]
+           res-after-seq
            (reduce
-             (fn [[primes res] form]
-               (prime-and-token primes res form))
-             [primes-after-open-bracket res-after-open-bracket]
+             parse-tokens
+             res-after-open-bracket
              form)]
-       (advance-prime-and-token primes-after-seq res-after-seq close-bracket))
-     :else
-     (advance-prime-and-token primes res form))))
+       (conj res-after-seq close-bracket))
+     (conj res form))))
 
 (defn bigpow [a b]
   (.pow (biginteger a) b))
 
 (defn pm-lisp->godel-num [form]
-  (->> (prime-and-token form)
+  (->> (parse-tokens form)
+       (map token->num)
+       (map vector (primes))
        (map (partial apply bigpow))
        (reduce *)))
 
